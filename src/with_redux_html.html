@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>redux</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.js" ></script>
+</head>
+<body>
+   <div id="subject"></div>
+   <div id="toc"></div>
+   <div id="control"></div>
+   <div id="article"></div>
+    
+       
+       
+
+    <script>
+        function subject(){
+            document.querySelector('#subject').innerHTML=`
+            <header>
+                <h1>WEB</h1>
+                HELLO WEB
+            </header>
+            `
+        }
+        function TOC(){
+            var state = store.getState(); //변수 선언해서 state 가져오기
+            var i =0;
+            var liTags = '';
+            while(i< state.contents.length){ // 가져온 state 쓰기
+                  liTags = liTags + `
+                    <li>
+                        <a onclick="
+                            event.preventDefault();
+                            var action = {type:'SELECT',id:${state.contents[i].id}}
+                            store.dispatch(action);" 
+                            href="${state.contents[i].id}">${state.contents[i].title}</a>
+                    </li>
+                    `
+                  i= i+1
+                  }
+            
+            document.querySelector('#toc').innerHTML=`
+             <nav>
+                <ol>${liTags}</ol>
+            </nav>
+            `
+        }
+        function control(){
+            document.querySelector('#control').innerHTML=`
+            <ul>
+                <li><a onclick="
+                    event.preventDefault();"
+                    store.dispatch({
+                    type:'CHANGE_MODE', mode:'create'
+                    })
+                href="/create">create</a></li>
+                <li><input onclick=" 
+                    store.dispatch({
+                        type:'EDLETE'
+                    })"
+                    
+                    type="button" value="delete"></li>
+            </ul>
+            `
+        }
+        
+        function article(){
+            var state= store.getState();
+            if(state.mode === 'create'){
+                document.querySelector('#article').innerHTML=`
+                <article>
+                   <form onsubmit="event.preventDefault();
+                    var _title = this.title.value;
+                    var _desc = this.desc.value;
+                    store.dispatch({type:'CREATE', title:_title, desc:_desc })
+                    ">
+                        <p><input type="text" name="title" placeholder="title"></p>
+                        <p><textarea name="desc" placeholder="description"></textarea></p>
+                        <input type="submit">
+                    </form>
+                </article>
+                `
+                        
+            }else if(state.mode === 'read'){
+                var i =0;
+                var aTitle, aDesc;
+                while(i< state.contents.length){
+                    if(state.contents[i].id === state.selected_id){
+
+                        aTitle = state.contents[i].title;
+                        aDesc = state.contents[i].desc;
+                        break;
+                       }
+                    i = i+1;
+
+                }
+                document.querySelector('#article').innerHTML=`
+                <article>
+                    <h2>${aTitle}</h2>
+                    <p>${aDesc}</p>
+                </article>
+                `
+            }else if(state.mode === 'welcome'){
+                 document.querySelector('#article').innerHTML=`
+                <article>
+                    <h2>welcome</h2>
+                    <p>hello</p>
+                </article>
+                `
+            }
+
+        }
+        
+        function reducer(state,action){ // **state와 action 전달
+            if(state === undefined){ //2. 기본값 설정
+                return{
+                    max_id:2,
+                    mode:"welcome", 
+                    selected_id:2,
+                    contents:[
+                        {id:1,title:'1번이다', desc:'1번이 뭔데'},
+                        {id:2,title:'2번이다', desc:'2번이 뭔데'},
+                    ]
+                    
+                }
+            }// 기본값이 아니면
+            var newState ; // 복제된 state값 넣을 변수
+            if(action.type==='SELECT'){
+                newState = Object.assign({},state,{selected_id:action.id,mode:'read'}); // state값이 하나하나 {}빈객체에 복제된다.
+            }else if(action.type === 'CREATE'){
+                var newMaxId = state.max_id + 1;
+                var newContents = state.contents.concat(); //배열 복제는 concat으로
+                newContents.push({id:newMaxId, title:action.title, desc:action.desc});
+                newState = Object.assign({},state,{
+                    max_id:newMaxId,
+                    contents:newContents,
+                    mode:'read'
+                })
+            }else if(action.type === 'DELETE'){
+                var newContents = [];
+                var i = 0;
+                while(i <state.contents.length){
+                    if(state.selected_id === state.contents[i].id){
+                       newContents.push(
+                        state.contents[i]
+                       )
+                    }
+                    i=i+1;
+                }
+                newState = Object.assign({},state,{
+                    contents:newContents,
+                    mode:'welcome'
+                })
+            }else if(action.type==='CHANGE_MODE'){
+                newState = Object.assign({},state,{
+                    mode:action.mode
+                });
+            }
+            return newState;
+            
+        }
+        var store = Redux.createStore(reducer); //1. store 만들고 변수 선언
+        
+        
+        store.subscribe(article);
+        store.subscribe(TOC);
+        subject();
+        TOC(); 
+        control();
+        article();
+    </script>
+    
+   
+   
+</body>
+</html>
