@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import store from "../store";
 
 class AddNumber extends Component {
   state = { size: 1 };
@@ -10,7 +11,8 @@ class AddNumber extends Component {
           type="button"
           value="+"
           onClick={function () {
-            this.props.onClick(this.state.size); //부모에 size와 함께 클릭이벤트 전달
+            //부모에 size와 함께 클릭이벤트 전달
+            store.dispatch({ type: "INCREMENT", size: this.state.size });
           }.bind(this)}
         />
         <input
